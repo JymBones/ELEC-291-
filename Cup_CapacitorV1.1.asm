@@ -103,9 +103,8 @@ $LIST
 Display_Cap:  db 'Capacitance(xx):', 0
 CLEAR: db '                  ',0
 Display_nF: db 'nF',0
-Playing: db 'Playing...',0
-Water_lev: db 'Water Level:',0
-Tablesp: db 'tbsp',0
+Water_lev: db 'Water Level(%):',0
+
 
 Left_blank mac
 	mov a, %0
@@ -149,10 +148,10 @@ skip_blank:
 ; four decimal places.
 
 Display_formated_BCD:
-    Set_Cursor(2, 1)
-    ;Display_BCD(bcd+4)
-    ;Display_BCD(bcd+3)
- 	;Display_BCD(bcd+2)
+    Set_Cursor(2, 4)
+    Display_BCD(bcd+4)
+    Display_BCD(bcd+3)
+ 	Display_BCD(bcd+2)
 	Display_BCD(bcd+1)
 	Display_char(#'.')
 	Display_BCD(bcd+0)
@@ -464,15 +463,41 @@ calculate_val:
  	lcall add32
  	load_y(18)
  	lcall div32
- 	;load_y(5)
- 	;lcall mul32
+ 	load_y(470000)
+ 	lcall mul32
+ 	load_y(10000)
+ 	lcall div32
+ 	load_y(5000)
+ 	lcall sub32
+ 	load_y(10)
+ 	lcall div32
+ 	
+ hexconvert:
+ 	lcall hex2bcd
+ 	
+ 	mov a, bcd+3
+ 	cjne a, #0x00, overflow
+ 	ljmp hexconvert100
  
-	lcall hex2bcd
+ overflow:
+ 
+ mov bcd+4,#0x00
+ mov bcd+3,#0x00
+ mov bcd+2,#0x00
+ mov bcd+1,#0x00
+ mov bcd+0,#0x00
+
+ hexconvert100:
+ mov a,bcd+2
+ cjne a,#0x01,print_level
+ mov bcd+1,#0x00
+ mov bcd+0,#0x00
+ 
+ print_level:
 	Set_Cursor(1,1)
     Send_Constant_String(#Water_lev)	
 	lcall Display_formated_BCD
-	Set_Cursor(2,10)
-	Send_Constant_String(#Tablesp)
+
 	
 	
 play_seq:
