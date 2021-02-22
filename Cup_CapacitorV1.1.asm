@@ -76,6 +76,7 @@ x:   ds 4
 y:   ds 4
 bcd: ds 5
 Unit_sel: ds 1
+tbsp: ds 1
 
 BSEG
 mf: dbit 1
@@ -103,6 +104,8 @@ Display_Cap:  db 'Capacitance(xx):', 0
 CLEAR: db '                  ',0
 Display_nF: db 'nF',0
 Playing: db 'Playing...',0
+Water_lev: db 'Water Level:',0
+Tablesp: db 'tbsp',0
 
 Left_blank mac
 	mov a, %0
@@ -145,11 +148,27 @@ skip_blank:
 ; We can display a number any way we want.  In this case with
 ; four decimal places.
 
-Display_formated_BCD_nF:
-	Set_Cursor(2, 1)
+Display_formated_BCD:
+    Set_Cursor(2, 1)
+    ;Display_BCD(bcd+4)
+    ;Display_BCD(bcd+3)
+ 	;Display_BCD(bcd+2)
 	Display_BCD(bcd+1)
 	Display_char(#'.')
 	Display_BCD(bcd+0)
+	; Replace all the zeros to the left with blanks
+	Set_Cursor(2, 1)
+	;Left_blank(bcd+4, skip_blankf)
+	;Left_blank(bcd+3, skip_blankf)
+	;Left_blank(bcd+2, skip_blankf)
+	;Left_blank(bcd+1, skip_blankf)
+	mov a, bcd+0
+	anl a, #0f0h
+	swap a
+	jnz skip_blankf
+	Display_char(#' ')
+
+skip_blankf:
 	ret
 	
 Wait_one_second:	
@@ -384,8 +403,6 @@ Init_L2:
 MainProgram:
     mov SP, #0x7f ; Setup stack pointer to the start of indirectly accessable data memory minus one
     lcall Init_all ; Initialize the hardware
-	Set_Cursor(1,1)
-    Send_Constant_String(#Display_Cap)
 
 forever_loop:
 
@@ -439,14 +456,23 @@ calculate_val:
 	; to variables x and y. The same code above may be written as:
 	Load_x(1440000000)
     lcall div32
-    Load_y(364)
-    lcall sub32
+    Load_y(365)
+    lcall sub32	  
+ 	load_y(1000)
+ 	lcall mul32
+ 	load_y(53)
+ 	lcall add32
+ 	load_y(18)
+ 	lcall div32
+ 	;load_y(5)
+ 	;lcall mul32
+ 
 	lcall hex2bcd
 	Set_Cursor(1,1)
-    Send_Constant_String(#Display_Cap)	
-	Set_Cursor(1,13)
-	Send_Constant_String(#Display_nF)
-	lcall Display_formated_BCD_nF
+    Send_Constant_String(#Water_lev)	
+	lcall Display_formated_BCD
+	Set_Cursor(2,10)
+	Send_Constant_String(#Tablesp)
 	
 	
 play_seq:
@@ -454,7 +480,9 @@ play_seq:
 	jb P3.7, forever_loop0 ; Check if push-button pressed
 	jnb P3.7, $ ; Wait for push-button release
 	; Play the whole memory
-	setb done
+	mov a, x+1
+	cjne a,#0x00, forever_loop0
+	
 	clr TR2 ; Stop Timer 2 ISR from playing previous request
 	setb FLASH_CE
 	clr SPEAKER ; Turn off speaker.
