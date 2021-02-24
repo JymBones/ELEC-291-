@@ -932,6 +932,8 @@ play_mem:
 	setb SPEAKER ; Turn on speaker.
 	setb TR2 ; Start playback by enabling Timer 2
 
+forever_loop1:
+ljmp forever_loop
 	
 serial_get:
 	lcall getchar ; Wait for data to arrive
@@ -941,9 +943,6 @@ serial_get:
 	clr SPEAKER ; Turn off speaker.
 	lcall getchar
 ljmp commands_start
-
-forever_loop1:
-ljmp forever_loop
 
 commands_start:
 ;---------------------------------------------------------	
