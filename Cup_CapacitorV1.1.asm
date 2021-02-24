@@ -28,7 +28,7 @@ F_SCK_MAX      EQU 20000000
 BAUDRATE       EQU 115200
 
 FLASH_CE EQU P0.3
-SPEAKER  EQU P2.0
+SPEAKER  EQU P2.1
 
 ; Commands supported by the SPI flash memory according to the datasheet
 WRITE_ENABLE     EQU 0x06  ; Address:0 Dummy:0 Num:0
@@ -77,6 +77,14 @@ y:   ds 4
 bcd: ds 5
 Unit_sel: ds 1
 tbsp: ds 1
+length1: ds 4 ;1 markes the more significant digit ;KEEP
+length2: ds 4  ;KEEP
+additions1: ds 17
+additions2: ds 17
+position: ds 1
+currentloc1: ds 1
+currentloc2: ds 1
+currentloc3: ds 1
 
 BSEG
 mf: dbit 1
@@ -89,13 +97,13 @@ $LIST
 
 ; These 'equ' must match the hardware wiring
 ; They are used by 'LCD_4bit.inc'
-LCD_RS equ P3.3
-LCD_RW equ P3.2
-LCD_E  equ P3.1
-LCD_D4 equ P2.5
-LCD_D5 equ P2.4
-LCD_D6 equ P2.3
-LCD_D7 equ P2.2
+LCD_RS equ P2.0
+LCD_RW equ P1.7
+LCD_E  equ P1.6
+LCD_D4 equ P1.1
+LCD_D5 equ P1.0
+LCD_D6 equ P0.7
+LCD_D7 equ P0.6
 $NOLIST
 $include(LCD_4bit_72MHz.inc)
 $LIST
@@ -104,7 +112,7 @@ Display_Cap:  db 'Capacitance(xx):', 0
 CLEAR: db '                  ',0
 Display_nF: db 'nF',0
 Water_lev: db 'Water Level(%):',0
-
+madeIt: db 'Made it', 0
 
 Left_blank mac
 	mov a, %0
@@ -121,6 +129,282 @@ Left_blank_%M_a:
 Left_blank_%M_b:
 	Display_char(#' ')
 endmac
+end_search_step_step_12540:
+	ljmp end_search_step_12540
+; set currentlocation in table given positon
+determine_location:
+	mov x+0, #0
+	mov x+1, #0
+	mov x+2, #0
+	mov x+3, #0
+	;No addition
+	mov a, position
+	jz end_search_step_step_12540
+	mov y+0, #0x7a
+	mov y+1, #0x49
+	mov y+2, #0
+	mov y+3, #0 
+	lcall add32
+	;First addition
+	mov a, position
+	add a, #-1
+	jz end_search_step_step_12540
+	lcall add32
+	;Second addition
+	mov a, position
+	add a, #-2
+	jz end_search_step_12540
+	lcall add32
+	;Third addition
+	mov a, position
+	add a, #-3
+	jz end_search_step_12540
+	mov y+0, #0xc2
+	mov y+1, #0x3d
+	mov y+2, #0
+	mov y+3, #0 
+	lcall add32
+	;Forth addtion
+	mov a, position
+	add a, #-4
+	jz end_search_step_12540
+	mov y+0, #0x7a
+	mov y+1, #0x49
+	mov y+2, #0
+	mov y+3, #0 
+	lcall add32
+	;Fith addtion
+	mov a, position
+	add a, #-5
+	jz end_search_step_12540
+	lcall add32
+	;Sixth addtion
+	mov a, position
+	add a, #-6
+	jz end_search_step_12540
+	lcall add32
+	;Seventh addtion
+	mov a, position
+	add a, #-7
+	jz end_search_step_12540
+	lcall add32
+	;Eight addtion
+	mov a, position
+	add a, #-8
+	jz end_search_step_12540
+	mov y+0, #0xc2
+	mov y+1, #0x3d
+	mov y+2, #0
+	mov y+3, #0 
+	lcall add32
+	;Ninth addtion
+	mov a, position
+	add a, #-9
+	jz end_search_step_12540
+	lcall add32
+	;Tenth addtion
+	mov a, position
+	add a, #-10
+	jz end_search_step_12540
+	lcall add32
+	;Eleventh addtion
+	mov a, position
+	add a, #-11
+	jz end_search_step_12540
+	ljmp skip_stepper1
+;stepper for locations requiring 12560 length
+end_search_step_12540:
+	mov length1, #High(12540)
+	mov length2, #Low(12540)
+	ljmp end_search
+
+skip_stepper1:
+	mov y+0, #0xaa
+	mov y+1, #0x41
+	mov y+2, #0
+	mov y+3, #0 
+	lcall add32	
+	;Twelth addtion
+	mov a, position
+	add a, #-12
+	jz end_search_step_15540
+	;Thirteenth addtion
+	lcall add32
+	mov y+0, #0xe8
+	mov y+1, #0x03
+	mov y+2, #0
+	mov y+3, #0
+	lcall add32
+	mov a, position
+	add a, #-13
+	jz end_search_step_15540
+	mov y+0, #0x32
+	mov y+1, #0x55
+	mov y+2, #0
+	mov y+3, #0
+	lcall add32
+	;Forteenth addtion
+	mov a, position
+	add a, #-14
+	jz end_search_step_15540
+	lcall add32
+	;Fifteenth addtion
+	mov a, position
+	add a, #-15
+	jz end_search_step_15540
+	lcall add32
+	;Sizteenth addtion
+	mov a, position
+	add a, #-16
+	jz end_search_step_15540
+	ljmp skip_stepper2
+;stepper for locations requiring 15540 length
+end_search_step_15540:
+	mov length1, #High(15540)
+	mov length2, #Low(15540)
+	ljmp end_search
+
+skip_stepper2:
+	mov y+0, #0xea
+	mov y+1, #0x60
+	mov y+2, #0
+	mov y+3, #0
+	lcall add32
+	;Seventeeth addtion(done 17 addition)
+	mov a, position
+	add a, #-17
+	jz end_search_step_17540
+	lcall add32
+	;Eighteenth addtion
+	mov a, position
+	add a, #-18
+	jz end_search_step_17540
+	mov y+0, #0xaa
+	mov y+1, #0x41
+	mov y+2, #0
+	mov y+3, #0
+	lcall add32
+	;Ninteeth addtion
+	mov a, position
+	add a, #-19
+	jz end_search_step_17540
+	ljmp skip_stepper3
+;stepper for locations requiring 17540 length
+end_search_step_17540:
+	mov length1, #High(17540)
+	mov length2, #Low(17540)
+	ljmp end_search
+skip_stepper3:	
+	mov y+0, #0xea
+	mov y+1, #0x60
+	mov y+2, #0
+	mov y+3, #0
+	lcall add32
+	;Twentieth addtion
+	mov a, position
+	add a, #-20
+	jz end_search_step_15540
+	mov y+0, #0xaa
+	mov y+1, #0x41
+	mov y+2, #0
+	mov y+3, #0
+	lcall add32
+	;Twenty First addtion
+	mov a, position
+	add a, #-21
+	jz end_search_step_15540
+	lcall add32
+	;Twenty Second addtion
+	mov a, position
+	add a, #-22
+	jz end_search_step_15540
+	mov y+0, #0xea
+	mov y+1, #0x60
+	mov y+2, #0
+	mov y+3, #0
+	lcall add32
+	;Twenty Third addtion
+	mov a, position
+	add a, #-23 ;50
+	jz end_search_step_step_15540
+	mov y+0, #0xaa
+	mov y+1, #0x41
+	mov y+2, #0
+	mov y+3, #0
+	lcall add32
+	;Twenty Fourth addtion
+	mov a, position
+	add a, #-24
+	jz end_search_step_step_15540
+	mov y+0, #0xea
+	mov y+1, #0x60
+	mov y+2, #0
+	mov y+3, #0
+	lcall add32
+	;Twenty Fith addtion
+	mov a, position
+	add a, #-25 ;70
+	jz end_search_step_step_15540
+	mov y+0, #0xaa
+	mov y+1, #0x41
+	mov y+2, #0
+	mov y+3, #0
+	lcall add32
+	;Twenty sixth addtion
+	mov a, position
+	add a, #-26 ;80
+	jz end_search_step_step_15540
+	lcall add32
+	;Twenty seventh addtion
+	mov a, position
+	add a, #-27 ;90
+	jz end_search_step_step_15540
+	lcall add32
+	mov y+0, #0xea
+	mov y+1, #0x60
+	mov y+2, #0
+	mov y+3, #0
+	lcall add32
+	;Twenty eighth addtion
+	mov a, position
+	add a, #-28 ;100
+	jz end_search_step_18540
+	ljmp skip_stepper4
+end_search_step_step_15540:
+	ljmp end_search_step_15540
+skip_stepper4:	
+	lcall add32
+	;Twenty nineth addtion
+	mov a, position
+	add a, #-29 ;percent
+	jz end_search_step_18540
+
+;stepper for locations requiring 15540 length
+end_search_step_18540:
+	mov length1, #High(18540)
+	mov length2, #Low(18540)
+	ljmp end_search
+	;;use math 32 to add and not worry of overflow since 32but and were not that big
+	;mov a, additions2
+	;add a, currentloc3
+	;jnz dontINC2
+	;inc currentloc2
+	
+;dontINC2:	
+	;;how get upper lower of nuber(HIGH,LOW())
+	
+end_search:
+	mov currentloc1, x+2
+	mov currentloc2, x+1
+	mov currentloc3, x+0
+	mov a, currentloc2
+	add a, #-0x73
+	jnz skip1
+	Set_Cursor(2, 1)
+	Send_Constant_String(#madeIt)
+	lcall Wait_one_second
+skip1:
+ret
 
 ; Sends 10-digit BCD number in bcd to the LCD
 Display_10_digit_BCD:
@@ -312,6 +596,12 @@ Init_all:
 	mov	CLKSEL, #0x00
 	mov	CLKSEL, #0x00 ; Second write to CLKSEL is required according to datasheet
 	
+
+	
+	mov length1+0, #0x48 
+	mov length2+0, #0x6c
+	mov position, #29
+	
 	clr done
 	; Wait for clock to settle at 24 MHz by checking the most significant bit of CLKSEL:
 Init_L1:
@@ -421,8 +711,8 @@ forever_loop:
     lcall Wait_one_second
     clr TR0 ; Stop counter 0, R7-TH0-TL0 has the frequency
 calculate_val:    
-    Load_x(98700);RA- Measure with MultiMeter
-    Load_y(9858) ;RB- Measure with MultiMeter
+    Load_x(100300);RA- Measure with MultiMeter
+    Load_y(10200) ;RB- Measure with MultiMeter
 	lcall add32
 	Load_y(100)
 	lcall div32
@@ -469,7 +759,7 @@ calculate_val:
  	lcall div32
  	load_y(5000)
  	lcall sub32
- 	load_y(10)
+ 	load_y(30) ;changed from 10 t0 30
  	lcall div32
  	
  hexconvert:
@@ -505,30 +795,30 @@ play_seq:
 	jb P3.7, forever_loop0 ; Check if push-button pressed
 	jnb P3.7, $ ; Wait for push-button release
 	; Play the whole memory
-	mov a, x+1
-	cjne a,#0x00, forever_loop0
+
 	
 	clr TR2 ; Stop Timer 2 ISR from playing previous request
 	setb FLASH_CE
 	clr SPEAKER ; Turn off speaker.
 	
 	clr FLASH_CE ; Enable SPI Flash
+	lcall determine_location
 	mov a, #READ_BYTES
 	lcall Send_SPI
 	; Set the initial position in memory where to start playing
-	mov a, #0x00
+	mov a, currentloc1
 	lcall Send_SPI
-	mov a, #0x00
+	mov a, currentloc2
 	lcall Send_SPI
-	mov a, #0x00
+	mov a, currentloc3
 	lcall Send_SPI
-	mov a, #0x00 ; Request first byte to send to DAC
+	mov a, #0xff ; Request first byte to send to DAC
 	lcall Send_SPI
 	
 	; How many bytes to play? All of them!  Asume 4Mbytes memory: 0x3fffff
-	mov w+2, #0x3f
-	mov w+1, #0xff
-	mov w+0, #0xff
+	mov w+2, #0x00
+	mov w+1, length1
+	mov w+0, length2
 	
 	setb SPEAKER ; Turn on speaker.
 	setb TR2 ; Start playback by enabling Timer 2
