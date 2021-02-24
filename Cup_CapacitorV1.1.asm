@@ -69,6 +69,9 @@ org 0x0023 ; Serial port receive/transmit interrupt vector (not used in this cod
 org 0x005b ; Timer 2 interrupt vector.  Used in this code to replay the wave file.
 	ljmp Timer2_ISR
 	
+org 0x0073 ; Timer 3 overflow
+ 	ljmp Timer3_ISR
+	
 	; Variables used in the program:
 dseg at 30H
 w:   ds 3 ; 24-bit play counter.  Decremented in Timer 2 ISR.
@@ -494,6 +497,27 @@ Timer2_ISR_Done:
 	pop psw
 	pop acc
 	reti
+
+ ;---------------------------------;
+ ; ISR for Timer 3. Used to        ;
+ ; determine whether the audio     ;
+ ; should play.                    ;
+ ;---------------------------------;
+
+Timer3_ISR:
+
+
+
+
+  reti
+
+
+
+
+
+
+
+
 
 ;---------------------------------;
 ; Sends a byte via serial port    ;
