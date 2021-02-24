@@ -821,79 +821,91 @@ cjne a,#0x09,next10
 mov position,#9
 ljmp play_mem
 next10:
-cjne a,#0x0A,next11
+cjne a,#0x10,next11
 mov position,#10
 ljmp play_mem
 next11:
-cjne a,#0x0B,next12
+cjne a,#0x11,next12;BCD=10001
 mov position,#11
 ljmp play_mem
 next12:
-cjne a,#0x0C,next13
+cjne a,#0x12,next13
 mov position,#12
 ljmp play_mem
 next13:
-cjne a,#0x0D,next14
+cjne a,#0x13,next14
 mov position,#13
 ljmp play_mem
 next14:
-cjne a,#0x0E,next15
+cjne a,#0x14,next15
 mov position,#14
 ljmp play_mem
 next15:
-cjne a,#0x0F,next16
+cjne a,#0x15,next16
 mov position,#15
 ljmp play_mem
 next16:
-cjne a,#0x10,next17
+cjne a,#0x16,next17
 mov position,#16
 ljmp play_mem
 next17:
-cjne a,#0x11,next18
+cjne a,#0x17,next18
 mov position,#17
 ljmp play_mem
 next18:
-cjne a,#0x12,next19
+cjne a,#0x18,next19
 mov position,#18
 ljmp play_mem
 next19:
-cjne a,#0x13,next20
+cjne a,#0x19,next20
 mov position,#19
 ljmp play_mem
+
 next20:
-cjne a,#0x14,next30
+cjne a,#0x30,N1
+N1:
+jnb cy,next30
+clr cy
+ ; set flag
+ ;do math
+ ;check flag before button 
+ ;clr flag at check_level
+ 
 mov position,#20
 ljmp play_mem
+
+
 next30:
-cjne a,#0x1E,next40
+cjne a,#0x30,next40
 mov position,#21
 ljmp play_mem
 next40:
-cjne a,#0x28,next50
+cjne a,#0x40,next50
 mov position,#22
 ljmp play_mem
 next50:
-cjne a,#0x32,next60
+cjne a,#0x50,next60
 mov position,#23
 ljmp play_mem
 next60:
-cjne a,#0x3C,next70
+cjne a,#0x60,next70
 mov position,#24
 ljmp play_mem
 next70:
-cjne a,#0x46,next80
+cjne a,#0x70,next80
 mov position,#25
 ljmp play_mem
 next80:
-cjne a,#0x50,next90
+cjne a,#0x90,next90
 mov position,#26
 ljmp play_mem
 next90:
-cjne a,#0x5A,next100
+cjne a,#0xA0,next100
 mov position,#27
 ljmp play_mem
 next100:
-cjne a,#0x64,next_percent
+mov a, bcd+2
+cjne a,#0x01,next_percent
 mov position,#28
 ljmp play_mem
 
@@ -931,7 +943,6 @@ play_mem:
 	
 	setb SPEAKER ; Turn on speaker.
 	setb TR2 ; Start playback by enabling Timer 2
-
 forever_loop1:
 ljmp forever_loop
 	
