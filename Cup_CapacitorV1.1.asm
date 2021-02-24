@@ -617,6 +617,22 @@ Init_L2:
     anl a, #0b_1111_0000 ; Clear the bits of timer/counter 0
     orl a, #0b_0000_0101 ; Sets the bits of timer/counter 0 for a 16-bit counter
     mov TMOD, a
+    
+    clr TR3 ; Stop timer 3
+      mov a, EIE1
+      anl a, #0b_0111_1111 ; Clear the timer 3 bit of external interrupt enable register
+      orl a, #0b_1000_0000 ; Enable timer 3 interrupts
+      mov EIE1, a
+
+      mov a, TMR3CN0
+      anl a, #0b_0000_0000 ; 
+      orl a, #0b_0000_0100 ; 
+      mov TMR3CN0, a
+      
+      mov a, TMR3CN1
+      anl a, #0b_0000_0000
+      orl a, #0b_0110_0000
+      mov TMR3CN1, a
 
 	; Enable serial communication and set up baud rate using timer 1
 	mov	SCON0, #0x10	
