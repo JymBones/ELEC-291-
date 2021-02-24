@@ -80,7 +80,7 @@ tbsp: ds 1
 length1: ds 4 ;1 markes the more significant digit ;KEEP
 length2: ds 4  ;KEEP
 additions1: ds 17
-additions2: ds 17
+additions0: ds 17
 position: ds 1
 currentloc1: ds 1
 currentloc2: ds 1
@@ -141,9 +141,7 @@ determine_location:
 	mov a, position
 	jz end_search_step_step_12540
 	mov y+0, #0x7a
-	mov y+1, #0x49
-	mov y+2, #0
-	mov y+3, #0 
+	mov y+1, additions1+0
 	lcall add32
 	;First addition
 	mov a, position
@@ -159,19 +157,15 @@ determine_location:
 	mov a, position
 	add a, #-3
 	jz end_search_step_12540
-	mov y+0, #0xc2
-	mov y+1, #0x3d
-	mov y+2, #0
-	mov y+3, #0 
+	mov y+0,  additions0+1
+	mov y+1, additions1+1
 	lcall add32
 	;Forth addtion
 	mov a, position
 	add a, #-4
 	jz end_search_step_12540
 	mov y+0, #0x7a
-	mov y+1, #0x49
-	mov y+2, #0
-	mov y+3, #0 
+	mov y+1, additions1+0
 	lcall add32
 	;Fith addtion
 	mov a, position
@@ -192,10 +186,8 @@ determine_location:
 	mov a, position
 	add a, #-8
 	jz end_search_step_12540
-	mov y+0, #0xc2
-	mov y+1, #0x3d
-	mov y+2, #0
-	mov y+3, #0 
+	mov y+0,  additions0+1
+	mov y+1, additions1+1
 	lcall add32
 	;Ninth addtion
 	mov a, position
@@ -219,29 +211,25 @@ end_search_step_12540:
 	ljmp end_search
 
 skip_stepper1:
-	mov y+0, #0xaa
-	mov y+1, #0x41
-	mov y+2, #0
-	mov y+3, #0 
+	mov y+0, #0x62
+	mov y+1, #0x4d
 	lcall add32	
 	;Twelth addtion
 	mov a, position
 	add a, #-12
 	jz end_search_step_15540
-	;Thirteenth addtion
+	mov y+0, additions0+2
+	mov y+1, additions1+2
 	lcall add32
 	mov y+0, #0xe8
 	mov y+1, #0x03
-	mov y+2, #0
-	mov y+3, #0
 	lcall add32
+	;Thirteenth addtion
 	mov a, position
 	add a, #-13
 	jz end_search_step_15540
 	mov y+0, #0x32
 	mov y+1, #0x55
-	mov y+2, #0
-	mov y+3, #0
 	lcall add32
 	;Forteenth addtion
 	mov a, position
@@ -267,8 +255,6 @@ end_search_step_15540:
 skip_stepper2:
 	mov y+0, #0xea
 	mov y+1, #0x60
-	mov y+2, #0
-	mov y+3, #0
 	lcall add32
 	;Seventeeth addtion(done 17 addition)
 	mov a, position
@@ -279,10 +265,8 @@ skip_stepper2:
 	mov a, position
 	add a, #-18
 	jz end_search_step_17540
-	mov y+0, #0xaa
-	mov y+1, #0x41
-	mov y+2, #0
-	mov y+3, #0
+	mov y+0, additions0+2
+	mov y+1, additions1+2
 	lcall add32
 	;Ninteeth addtion
 	mov a, position
@@ -297,17 +281,17 @@ end_search_step_17540:
 skip_stepper3:	
 	mov y+0, #0xea
 	mov y+1, #0x60
-	mov y+2, #0
-	mov y+3, #0
 	lcall add32
 	;Twentieth addtion
 	mov a, position
 	add a, #-20
 	jz end_search_step_15540
-	mov y+0, #0xaa
-	mov y+1, #0x41
-	mov y+2, #0
-	mov y+3, #0
+	;mov x+0, #0x50
+	;mov x+1, #0xf0
+	;mov x+2, #0x05
+	;mov x+3, #0
+	mov y+0, additions0+2
+	mov y+1, additions1+2
 	lcall add32
 	;Twenty First addtion
 	mov a, position
@@ -317,20 +301,16 @@ skip_stepper3:
 	;Twenty Second addtion
 	mov a, position
 	add a, #-22
-	jz end_search_step_15540
+	jz end_search_step_step_15540
 	mov y+0, #0xea
 	mov y+1, #0x60
-	mov y+2, #0
-	mov y+3, #0
 	lcall add32
 	;Twenty Third addtion
 	mov a, position
 	add a, #-23 ;50
 	jz end_search_step_step_15540
-	mov y+0, #0xaa
-	mov y+1, #0x41
-	mov y+2, #0
-	mov y+3, #0
+	mov y+0, additions0+2
+	mov y+1, additions1+2
 	lcall add32
 	;Twenty Fourth addtion
 	mov a, position
@@ -338,17 +318,13 @@ skip_stepper3:
 	jz end_search_step_step_15540
 	mov y+0, #0xea
 	mov y+1, #0x60
-	mov y+2, #0
-	mov y+3, #0
 	lcall add32
 	;Twenty Fith addtion
 	mov a, position
 	add a, #-25 ;70
 	jz end_search_step_step_15540
-	mov y+0, #0xaa
-	mov y+1, #0x41
-	mov y+2, #0
-	mov y+3, #0
+	mov y+0, additions0+2
+	mov y+1, additions1+2
 	lcall add32
 	;Twenty sixth addtion
 	mov a, position
@@ -359,11 +335,8 @@ skip_stepper3:
 	mov a, position
 	add a, #-27 ;90
 	jz end_search_step_step_15540
-	lcall add32
 	mov y+0, #0xea
 	mov y+1, #0x60
-	mov y+2, #0
-	mov y+3, #0
 	lcall add32
 	;Twenty eighth addtion
 	mov a, position
@@ -385,7 +358,7 @@ end_search_step_18540:
 	mov length2, #Low(18540)
 	ljmp end_search
 	;;use math 32 to add and not worry of overflow since 32but and were not that big
-	;mov a, additions2
+	;mov a, additions0
 	;add a, currentloc3
 	;jnz dontINC2
 	;inc currentloc2
@@ -397,9 +370,8 @@ end_search:
 	mov currentloc1, x+2
 	mov currentloc2, x+1
 	mov currentloc3, x+0
-	mov a, currentloc2
-	add a, #-0x73
-	jnz skip1
+	mov a, currentloc3
+	cjne a, #0x4a, skip1
 	Set_Cursor(2, 1)
 	Send_Constant_String(#madeIt)
 	lcall Wait_one_second
@@ -597,10 +569,16 @@ Init_all:
 	mov	CLKSEL, #0x00 ; Second write to CLKSEL is required according to datasheet
 	
 
-	
+	mov additions1+0, #0x49
+	mov additions0+0, #0x7A
+	mov additions1+1, #0x3D
+	mov additions0+1, #0xC2
+	mov additions1+2, #0x41
+	mov additions0+2, #0xaa
+
 	mov length1+0, #0x48 
 	mov length2+0, #0x6c
-	mov position, #29
+	mov position, #22
 	
 	clr done
 	; Wait for clock to settle at 24 MHz by checking the most significant bit of CLKSEL:
