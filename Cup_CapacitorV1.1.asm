@@ -506,8 +506,46 @@ Timer2_ISR_Done:
 
 Timer3_ISR:
 
+check_level_ISR:
+	mov a, bcd+1
+	cjne a, #0x00,next1_ISR
+	mov position, #0
+	ljmp play_mem_ISR
+next1_ISR:
+	cjne a,#0x01,next2_ISR
+	mov position,#1
+	ljmp play_mem_ISR
+next2_ISR:
 
-
+play_mem_ISR:
+	
+	clr TR2 ; Stop Timer 2 ISR from playing previous request
+	setb FLASH_CE
+	clr SPEAKER ; Turn off speaker.
+	
+	clr FLASH_CE ; Enable SPI Flash
+	lcall determine_location
+	mov a, #READ_BYTES
+	lcall Send_SPI
+	; Set the initial position in memory where to start playing
+	mov a, currentloc1
+	lcall Send_SPI
+	mov a, currentloc2
+	lcall Send_SPI
+	mov a, currentloc3
+	lcall Send_SPI
+	mov a, #0xff ; Request first byte to send to DAC
+	lcall Send_SPI
+	
+	; How many bytes to play? All of them!  Asume 4Mbytes memory: 0x3fffff
+	mov w+2, #0x00
+	mov w+1, length1
+	mov w+0, length2
+	
+	setb SPEAKER ; Turn on speaker.
+	setb TR2 ; Start playback by enabling Timer 2
+	
+clr TF3H
 
   reti
 
