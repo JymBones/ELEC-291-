@@ -29,8 +29,8 @@ F_SCK_MAX      EQU 20000000
 BAUDRATE       EQU 115200
 
 FLASH_CE EQU P0.3
-SPEAKER  EQU P2.1
-Automatic_Sound_Switch equ P3.3
+SPEAKER  EQU P2.0
+Automatic_Sound_Switch equ P2.6
 
 
 ; Commands supported by the SPI flash memory according to the datasheet
@@ -106,13 +106,13 @@ $LIST
 
 ; These 'equ' must match the hardware wiring
 ; They are used by 'LCD_4bit.inc'
-LCD_RS equ P2.0
-LCD_RW equ P1.7
-LCD_E  equ P1.6
-LCD_D4 equ P1.1
-LCD_D5 equ P1.0
-LCD_D6 equ P0.7
-LCD_D7 equ P0.6
+LCD_RS equ P3.3
+LCD_RW equ P3.2
+LCD_E  equ P3.1
+LCD_D4 equ P2.5
+LCD_D5 equ P2.4
+LCD_D6 equ P2.3
+LCD_D7 equ P2.2
 $NOLIST
 $include(LCD_4bit_72MHz.inc)
 $LIST
@@ -730,7 +730,8 @@ forever_loop:
     lcall Wait_one_second
     clr TR0 ; Stop counter 0, R7-TH0-TL0 has the frequency
     setb TR1;!
-calculate_val:    
+calculate_val:
+clr ET2    
     Load_x(98700);RA- Measure with MultiMeter
     Load_y(9858) ;RB- Measure with MultiMeter
 	lcall add32
@@ -782,10 +783,10 @@ calculate_val:
  	load_y(40) 
  	lcall div32
  
+ 
  hexconvert:
  
- 
- 	lcall hex2bcd
+lcall hex2bcd
  	
  	mov a, bcd+3
  	cjne a, #0x00, overflow
@@ -804,8 +805,9 @@ calculate_val:
  cjne a,#0x01,print_level
  mov bcd+1,#0x00
  mov bcd+0,#0x00
- 
+
  print_level:
+ setb ET2
 	Set_Cursor(1,1)
     Send_Constant_String(#Water_lev)	
 	lcall Display_formated_BCD
