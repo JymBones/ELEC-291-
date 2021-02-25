@@ -28,7 +28,7 @@ F_SCK_MAX      EQU 20000000
 BAUDRATE       EQU 115200
 
 FLASH_CE EQU P0.3
-SPEAKER  EQU P2.0
+SPEAKER  EQU P2.1
 
 ; Commands supported by the SPI flash memory according to the datasheet
 WRITE_ENABLE     EQU 0x06  ; Address:0 Dummy:0 Num:0
@@ -100,13 +100,13 @@ $LIST
 
 ; These 'equ' must match the hardware wiring
 ; They are used by 'LCD_4bit.inc'
-LCD_RS equ P3.3
-LCD_RW equ P3.2
-LCD_E  equ P3.1
-LCD_D4 equ P2.5
-LCD_D5 equ P2.4
-LCD_D6 equ P2.3
-LCD_D7 equ P2.2
+LCD_RS equ P2.0
+LCD_RW equ P1.7
+LCD_E  equ P1.6
+LCD_D4 equ P1.1
+LCD_D5 equ P1.0
+LCD_D6 equ P0.7
+LCD_D7 equ P0.6
 $NOLIST
 $include(LCD_4bit_72MHz.inc)
 $LIST
@@ -738,10 +738,15 @@ calculate_val:
  	lcall div32
  	load_y(5000)
  	lcall sub32
- 	load_y(10) 
+ 	load_y(40) 
  	lcall div32
  	
  hexconvert:
+ 
+ 	mov x+0, #0x00
+	mov x+1, #0x24
+	mov x+2, #00
+	mov x+3, #00
  	lcall hex2bcd
  	
  	mov a, bcd+3
@@ -959,25 +964,25 @@ mov position,#24
 ljmp play_mem
 
 next70:
-cjne a,#0x90,N6
+cjne a,#0x80,N6
 N6:
 jnb cy,next80
 clr cy
 setb ones_flag
 subb a,#0x70
 mov remainder,a
-mov position,#26
+mov position,#25
 ljmp play_mem
 
 next80:
-cjne a,#0xA0,N7
+cjne a,#0x90,N7
 N7:
 jnb cy,next90
 clr cy
 setb ones_flag
-subb a,#0x90
+subb a,#0x80
 mov remainder,a
-mov position,#27
+mov position,#26
 ljmp play_mem
 
 next90:
@@ -986,9 +991,9 @@ N8:
 jnb cy,next100
 clr cy
 setb ones_flag
-subb a,#0xA0
+subb a,#0x90
 mov remainder,a
-mov position,#28
+mov position,#27
 ljmp play_mem
 
 next100:
