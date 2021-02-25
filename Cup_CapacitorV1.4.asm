@@ -86,12 +86,15 @@ currentloc1: ds 1
 currentloc2: ds 1
 currentloc3: ds 1
 remainder: ds 1
+Count1ms: ds 2
 
 BSEG
 mf: dbit 1
 done: dbit 1
 ones_flag: dbit 1
 percent_flag: dbit 1
+play_sount_flag: dbit 1
+seconds_flag: dbit 1
 
 
 $NOLIST
@@ -445,13 +448,39 @@ X1: djnz R0, X1 ; 3 machine cycles -> 3*40.81633ns*167=20.44898us (see table 10.
 ;-------------------------------------;
 Timer2_ISR:
    
-	mov	SFRPAGE, #0x00
+
+	mov	SFRPAGE, #0x00  ;!!part of sound routine?
 	clr	TF2H ; Clear Timer2 interrupt flag
 
 	; The registers used in the ISR must be saved in the stack
 	push acc
 	push psw
+
+		; Increment the 16-bit one mili second counter
+	inc Count1ms+0    ; Increment the low 8-bits first
+	mov a, Count1ms+0 ; If the low 8-bits overflow, then increment high 8-bits  ;will overflow to 0
+	jnz Inc_Done
+	inc Count1ms+1
+
+Inc_Done:
+	; Check if half second has passed
+	mov a, Count1ms+0
+	cjne a, #low(1000), Timer2_ISR_done1 ; Warning: this instruction changes the carry flag!
+	mov a, Count1ms+1
+	cjne a, #high(1000), Timer2_ISR_done1
 	
+	; 1000 milliseconds have passed.  Set a flag so the main program knows
+	setb seconds_flag ; Let the main program know half second had passed
+	; Reset to zero the milli-seconds counter, it is a 16-bit variable
+	clr a
+	mov Count1ms+0, a
+	mov Count1ms+1, a
+
+Timer2_ISR_done1:
+
+
+  ;only run normal timer 2 routine if play_sount_flag is 1
+jnb play_sount_flag, Timer2_ISR_Done	
 	; Check if the play counter is zero.  If so, stop playing sound.
 	mov a, w+0
 	orl a, w+1
@@ -486,7 +515,8 @@ keep_playing:
 	sjmp Timer2_ISR_Done
 
 stop_playing:
-	clr TR2 ; Stop timer 2
+	;clr TR2 ; Stop timer 2
+	clr play_sount_flag
 	clr done
 	setb FLASH_CE  ; Disable SPI Flash
 	clr SPEAKER ; Turn off speaker.  Removes hissing noise when not playing sound.
@@ -581,6 +611,13 @@ Init_all:
 	mov length2+0, #0x6c
 	mov position, #5
 	
+	clr play_sount_flag
+	clr seconds_flag
+	clr a
+	mov Count1ms+0, a
+	mov Count1ms+1, a
+	
+	
 	clr done
 	; Wait for clock to settle at 24 MHz by checking the most significant bit of CLKSEL:
 Init_L1:
@@ -657,7 +694,7 @@ Init_L2:
 	mov	TMR2H,#0xFF
 	mov	TMR2L,#0xFF
 	setb ET2 ; Enable Timer 2 interrupts
-	; setb TR2 ; Timer 2 is only enabled to play stored sound
+	setb TR2 ; Timer 2 is only enabled to play stored sound;!!tunred on
 	
 	setb EA ; Enable interrupts
 	lcall LCD_4BIT
@@ -743,10 +780,7 @@ calculate_val:
  	
  hexconvert:
  
- 	mov x+0, #0x00
-	mov x+1, #0x24
-	mov x+2, #00
-	mov x+3, #00
+ 
  	lcall hex2bcd
  	
  	mov a, bcd+3
@@ -779,8 +813,15 @@ play_seq:
     jb ones_flag, mov_remainder
     jb percent_flag,say_percent
 	jb RI, serial_get0
+	jb seconds_flag, automatic_routine
 	jb P3.7, forever_loop0 ; Check if push-button pressed
 	jnb P3.7, $ ; Wait for push-button release
+	; Play the whole memory
+	mov a, bcd+1
+	ljmp check_level
+
+automatic_routine:
+	clr seconds_flag
 	; Play the whole memory
 	mov a, bcd+1
 	ljmp check_level
@@ -1010,8 +1051,8 @@ ljmp play_mem
 
 
 play_mem:
-	
-	clr TR2 ; Stop Timer 2 ISR from playing previous request
+	clr play_sount_flag ;
+	;clr TR2 ; Stop Timer 2 ISR from playing previous request
 	setb FLASH_CE
 	clr SPEAKER ; Turn off speaker.
 	
@@ -1035,14 +1076,16 @@ play_mem:
 	mov w+0, length2
 	
 	setb SPEAKER ; Turn on speaker.
-	setb TR2 ; Start playback by enabling Timer 2
+	setb play_sount_flag
+	;setb TR2 ; Start playback by enabling Timer 2
 forever_loop1:
 ljmp forever_loop
 	
 serial_get:
 	lcall getchar ; Wait for data to arrive
 	cjne a, #'#', forever_loop1 ; Message format is #n[data] where 'n' is '0' to '9'
-	clr TR2 ; Stop Timer 2 from playing previous request
+	clr play_sount_flag
+	;clr TR2 ; Stop Timer 2 from playing previous request
 	setb FLASH_CE ; Disable SPI Flash	
 	clr SPEAKER ; Turn off speaker.
 	lcall getchar
@@ -1135,7 +1178,8 @@ Command_3_skip:
 ;---------------------------------------------------------	
 	cjne a, #'4' , Command_4_skip 
 Command_4_start: ; Playback a portion of the stored wav file
-	clr TR2 ; Stop Timer 2 ISR from playing previous request
+	clr play_sount_flag
+	;clr TR2 ; Stop Timer 2 ISR from playing previous request
 	setb FLASH_CE
 	
 	clr FLASH_CE ; Enable SPI Flash
@@ -1159,7 +1203,8 @@ Command_4_start: ; Playback a portion of the stored wav file
 	mov a, #0x00 ; Request first byte to send to DAC
 	lcall Send_SPI
 	
-	setb TR2 ; Start playback by enabling timer 2
+	setb play_sount_flag
+	;setb TR2 ; Start playback by enabling timer 2
 	ljmp forever_loop	
 Command_4_skip:
 
