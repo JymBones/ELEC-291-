@@ -1,9 +1,10 @@
-; EFM8_Receiver.asm:  This program implements a simple serial port
-; communication protocol to program, verify, and read an SPI flash memory.  Since
-; the program was developed to store wav audio files, it also allows 
-; for the playback of said audio.  It is assumed that the wav sampling rate is
-; 22050Hz, 8-bit, mono.
-;
+; Cup_Capacitor.asm: This program measures the water level in a cup capacitor,
+; then shows the water level percentage on an lcd screen and audibly. If
+; the boot button is pressed the water level percentage is read. If automatic 
+; sound is turned on water level percentages are cotninuosly read. Please 
+; load the percent1.wav file with EFM8_Receiver loaded before loading this program.
+
+
 ; Connections:
 ; 
 ; EFM8 board  SPI_FLASH
@@ -79,16 +80,16 @@ y:   ds 4
 bcd: ds 5
 Unit_sel: ds 1
 tbsp: ds 1
-length1: ds 4 ;1 markes the more significant digit ;KEEP
-length2: ds 4  ;KEEP
-additions1: ds 17
-additions0: ds 17
-position: ds 1
-currentloc1: ds 1
+length1: ds 4 ;1 markes the more significant digit
+length2: ds 4 ;size of desired sound 
+additions1: ds 3 
+additions0: ds 3
+position: ds 1  ;positon(0-29) in lookup table for percent1.wav 
+currentloc1: ds 1 ;location for beginning of desired sound
 currentloc2: ds 1
 currentloc3: ds 1
 remainder: ds 1
-Count1ms: ds 2
+Count1ms: ds 2    ;Counter used with timer2 for automatic sound
 
 BSEG
 mf: dbit 1
@@ -137,9 +138,17 @@ Left_blank_%M_a:
 Left_blank_%M_b:
 	Display_char(#' ')
 endmac
+
+
 end_search_step_step_12540:
 	ljmp end_search_step_12540
-; set currentlocation in table given positon
+	
+
+
+;-------------------------------------;
+; Search lookup table for location	  ;
+; and length given position           ;
+;-------------------------------------;	
 determine_location:
 	mov x+0, #0
 	mov x+1, #0
@@ -294,10 +303,6 @@ skip_stepper3:
 	mov a, position
 	add a, #-20
 	jz end_search_step_15540
-	;mov x+0, #0x50
-	;mov x+1, #0xf0
-	;mov x+2, #0x05
-	;mov x+3, #0
 	mov y+0, additions0+2
 	mov y+1, additions1+2
 	lcall add32
@@ -358,30 +363,16 @@ skip_stepper4:
 	;Twenty nineth addtion
 	mov a, position
 	add a, #-29 ;percent
-	jz end_search_step_18540
-
+	
 ;stepper for locations requiring 15540 length
 end_search_step_18540:
 	mov length1, #High(18540)
 	mov length2, #Low(18540)
-	ljmp end_search
-	;;use math 32 to add and not worry of overflow since 32but and were not that big
-	;mov a, additions0
-	;add a, currentloc3
-	;jnz dontINC2
-	;inc currentloc2
-	
-;dontINC2:	
-	;;how get upper lower of nuber(HIGH,LOW())
-	
+		
 end_search:
 	mov currentloc1, x+2
 	mov currentloc2, x+1
 	mov currentloc3, x+0
-	mov a, currentloc3
-	cjne a, #0x4a, skip1
-	lcall Wait_one_second
-skip1:
 ret
 
 ; Sends 10-digit BCD number in bcd to the LCD
@@ -419,10 +410,6 @@ Display_formated_BCD:
 	Display_BCD(bcd+0)
 	; Replace all the zeros to the left with blanks
 	Set_Cursor(2, 1)
-	;Left_blank(bcd+4, skip_blankf)
-	;Left_blank(bcd+3, skip_blankf)
-	;Left_blank(bcd+2, skip_blankf)
-	;Left_blank(bcd+1, skip_blankf)
 	mov a, bcd+0
 	anl a, #0f0h
 	swap a
@@ -431,15 +418,16 @@ Display_formated_BCD:
 
 skip_blankf:
 	ret
-	
+
+;Note: does not actual wait 1 second, its purpose is to act as a delay	
 Wait_one_second:	
-    ;For a 24.5MHz clock one machine cycle takes 1/24.5MHz=40.81633ns
+    ;For a 72MHz clock one machine cycle takes 1/72MHz=13.8888ns
     mov R2, #198 ; Calibrate using this number to account for overhead delays
 X3: mov R1, #245
 X2: mov R0, #167
-X1: djnz R0, X1 ; 3 machine cycles -> 3*40.81633ns*167=20.44898us (see table 10.2 in reference manual)
-    djnz R1, X2 ; 20.44898us*245=5.01ms
-    djnz R2, X3 ; 5.01ms*198=0.991s + overhead
+X1: djnz R0, X1 
+    djnz R1, X2 
+    djnz R2, X3
     ret
 
 
@@ -451,14 +439,14 @@ X1: djnz R0, X1 ; 3 machine cycles -> 3*40.81633ns*167=20.44898us (see table 10.
 Timer2_ISR:
    
 
-	mov	SFRPAGE, #0x00  ;!!part of sound routine?
+	mov	SFRPAGE, #0x00 
 	clr	TF2H ; Clear Timer2 interrupt flag
 
 	; The registers used in the ISR must be saved in the stack
 	push acc
 	push psw
-
-		; Increment the 16-bit one mili second counter
+	
+	; Increment the 16-bit one mili second counter
 	inc Count1ms+0    ; Increment the low 8-bits first
 	mov a, Count1ms+0 ; If the low 8-bits overflow, then increment high 8-bits  ;will overflow to 0
 	jnz Inc_Done
@@ -613,6 +601,8 @@ Init_all:
 	mov length2+0, #0x6c
 	mov position, #5
 	
+	;play_sount_flag is used in place of tuning timer 2 on and off
+	;This allows timer2 to continuously count for our automatic sound 
 	clr play_sount_flag
 	clr seconds_flag
 	clr a
@@ -815,7 +805,13 @@ jb Automatic_Sound_Switch, play_seq
 	;stops automatic
 	cpl Automatic_Sound_flag ;switch automatic on or off
 	
-	
+
+;-------------------------------------;
+; Play sequence. Determines if the    ;
+; current water level percentage      ;
+; should be read, then plays specific ;
+; sound bites accordingly             ;
+;-------------------------------------;
 play_seq:
     Wait_Milli_Seconds(#200)
     jb ones_flag, mov_remainder
@@ -829,6 +825,7 @@ Check_boot_button:
 	mov a, bcd+1
 	ljmp check_level
 
+;if Automatic_Sound_flag is 1 reas current water level
 automatic_routine:
 	clr seconds_flag
 	jnb Automatic_Sound_flag, Check_boot_button ;go back to loop if Automatic_Sound_flag is 0
@@ -915,7 +912,7 @@ mov position,#10
 ljmp play_mem
 
 next11:
-cjne a,#0x11,next12;BCD=10001
+cjne a,#0x11,next12
 mov position,#11
 ljmp play_mem
 
@@ -1059,7 +1056,7 @@ clr done
 ljmp play_mem
 
 
-
+; Play sound bite given location and length
 play_mem:
 	clr play_sount_flag ;
 	;clr TR2 ; Stop Timer 2 ISR from playing previous request
