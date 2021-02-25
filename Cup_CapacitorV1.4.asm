@@ -699,6 +699,7 @@ Init_L2:
 	setb TR2 ; Timer 2 is only enabled to play stored sound;!!tunred on
 	
 	setb EA ; Enable interrupts
+	setb IP.1
 	lcall LCD_4BIT
 	ret
 
@@ -713,11 +714,16 @@ MainProgram:
 
 forever_loop:
 
+mov a,w
+cjne a,#0x00,play
+clr ET2
     jnb done, update_reading
+
+play:    
     ljmp play_seq
     
     update_reading:
-    clr TR1;!
+    ;clr TR1;!
     ; Measure the frequency applied to pin T0 (T0 is routed to pin P1.2 using the 'crossbar')
     clr TR0 ; Stop counter 0
     mov TL0, #0
@@ -729,9 +735,9 @@ forever_loop:
     setb TR0 ; Start counter 0
     lcall Wait_one_second
     clr TR0 ; Stop counter 0, R7-TH0-TL0 has the frequency
-    setb TR1;!
+    ;setb TR1;!
 calculate_val:
-clr ET2    
+;cpl ET2    
     Load_x(98700);RA- Measure with MultiMeter
     Load_y(9858) ;RB- Measure with MultiMeter
 	lcall add32
@@ -807,7 +813,7 @@ lcall hex2bcd
  mov bcd+0,#0x00
 
  print_level:
- setb ET2
+ ;setb ET2
 	Set_Cursor(1,1)
     Send_Constant_String(#Water_lev)	
 	lcall Display_formated_BCD
@@ -827,6 +833,7 @@ jb Automatic_Sound_Switch, play_seq
 ; sound bites accordingly             ;
 ;-------------------------------------;
 play_seq:
+setb ET2
     Wait_Milli_Seconds(#200)
     jb ones_flag, mov_remainder
     jb percent_flag,say_percent
