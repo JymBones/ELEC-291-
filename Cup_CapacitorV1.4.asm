@@ -29,6 +29,8 @@ BAUDRATE       EQU 115200
 
 FLASH_CE EQU P0.3
 SPEAKER  EQU P2.1
+Automatic_Sound_Switch equ P3.3
+
 
 ; Commands supported by the SPI flash memory according to the datasheet
 WRITE_ENABLE     EQU 0x06  ; Address:0 Dummy:0 Num:0
@@ -95,7 +97,7 @@ ones_flag: dbit 1
 percent_flag: dbit 1
 play_sount_flag: dbit 1
 seconds_flag: dbit 1
-
+Automatic_Sound_flag: dbit 1
 
 $NOLIST
 $include(math32.inc)
@@ -616,7 +618,7 @@ Init_all:
 	clr a
 	mov Count1ms+0, a
 	mov Count1ms+1, a
-	
+	clr Automatic_Sound_flag
 	
 	clr done
 	; Wait for clock to settle at 24 MHz by checking the most significant bit of CLKSEL:
@@ -806,6 +808,12 @@ calculate_val:
     Send_Constant_String(#Water_lev)	
 	lcall Display_formated_BCD
 
+jb Automatic_Sound_Switch, play_seq  
+	Wait_Milli_Seconds(#50)	
+	jb Automatic_Sound_Switch, play_seq 
+	jnb Automatic_Sound_Switch, $	
+	;stops automatic
+	cpl Automatic_Sound_flag ;switch automatic on or off
 	
 	
 play_seq:
@@ -814,6 +822,7 @@ play_seq:
     jb percent_flag,say_percent
 	jb RI, serial_get0
 	jb seconds_flag, automatic_routine
+Check_boot_button:
 	jb P3.7, forever_loop0 ; Check if push-button pressed
 	jnb P3.7, $ ; Wait for push-button release
 	; Play the whole memory
@@ -822,6 +831,7 @@ play_seq:
 
 automatic_routine:
 	clr seconds_flag
+	jnb Automatic_Sound_flag, Check_boot_button ;go back to loop if Automatic_Sound_flag is 0
 	; Play the whole memory
 	mov a, bcd+1
 	ljmp check_level
