@@ -150,6 +150,11 @@ end_search_step_step_12540:
 ; and length given position           ;
 ;-------------------------------------;	
 determine_location:
+	push acc
+	push psw
+	push x
+	push y
+	
 	mov x+0, #0
 	mov x+1, #0
 	mov x+2, #0
@@ -373,6 +378,11 @@ end_search:
 	mov currentloc1, x+2
 	mov currentloc2, x+1
 	mov currentloc3, x+0
+
+	pop y
+	pop x
+	pop psw
+	pop acc
 ret
 
 ; Sends 10-digit BCD number in bcd to the LCD
@@ -455,9 +465,9 @@ Timer2_ISR:
 Inc_Done:
 	; Check if half second has passed
 	mov a, Count1ms+0
-	cjne a, #low(1000), Timer2_ISR_done1 ; Warning: this instruction changes the carry flag!
+	cjne a, #low(10000), Timer2_ISR_done1 ; Warning: this instruction changes the carry flag!
 	mov a, Count1ms+1
-	cjne a, #high(1000), Timer2_ISR_done1
+	cjne a, #high(10000), Timer2_ISR_done1
 	
 	; 1000 milliseconds have passed.  Set a flag so the main program knows
 	setb seconds_flag ; Let the main program know half second had passed
@@ -707,6 +717,7 @@ forever_loop:
     ljmp play_seq
     
     update_reading:
+    clr TR1;!
     ; Measure the frequency applied to pin T0 (T0 is routed to pin P1.2 using the 'crossbar')
     clr TR0 ; Stop counter 0
     mov TL0, #0
@@ -718,6 +729,7 @@ forever_loop:
     setb TR0 ; Start counter 0
     lcall Wait_one_second
     clr TR0 ; Stop counter 0, R7-TH0-TL0 has the frequency
+    setb TR1;!
 calculate_val:    
     Load_x(98700);RA- Measure with MultiMeter
     Load_y(9858) ;RB- Measure with MultiMeter
@@ -769,7 +781,7 @@ calculate_val:
  	lcall sub32
  	load_y(40) 
  	lcall div32
- 	
+ 
  hexconvert:
  
  
