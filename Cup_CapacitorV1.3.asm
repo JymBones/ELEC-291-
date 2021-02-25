@@ -69,6 +69,9 @@ org 0x0023 ; Serial port receive/transmit interrupt vector (not used in this cod
 org 0x005b ; Timer 2 interrupt vector.  Used in this code to replay the wave file.
 	ljmp Timer2_ISR
 	
+org 0x0073 ; Timer 3 overflow
+ 	ljmp Timer3_ISR
+	
 	; Variables used in the program:
 dseg at 30H
 w:   ds 3 ; 24-bit play counter.  Decremented in Timer 2 ISR.
@@ -495,6 +498,23 @@ Timer2_ISR_Done:
 	pop psw
 	pop acc
 	reti
+	
+;---------------------------------;
+ ; ISR for Timer 3. Used to        ;
+ ; determine whether the audio     ;
+ ; should play.                    ;
+ ;---------------------------------;
+
+Timer3_ISR:
+	
+	
+	
+	
+mov a, TMR3CN0
+  anl a, #0b_0111_1111
+  mov a, TMR3CN0
+
+  reti
 
 ;---------------------------------;
 ; Sends a byte via serial port    ;
@@ -618,6 +638,22 @@ Init_L2:
     anl a, #0b_1111_0000 ; Clear the bits of timer/counter 0
     orl a, #0b_0000_0101 ; Sets the bits of timer/counter 0 for a 16-bit counter
     mov TMOD, a
+    
+    mov a, EIE1
+      anl a, #0b_0111_1111 ; Clear the timer 3 bit of external interrupt enable register
+      orl a, #0b_1000_0000 ; Enable timer 3 interrupts
+      mov EIE1, a
+
+      mov a, TMR3CN0
+      anl a, #0b_0000_0000 ; 
+      orl a, #0b_0000_0100 ; 
+      mov TMR3CN0, a
+      
+      mov a, TMR3CN1
+      anl a, #0b_0000_0000
+      orl a, #0b_0110_0000
+      mov TMR3CN1, a
+    
 
 	; Enable serial communication and set up baud rate using timer 1
 	mov	SCON0, #0x10	
