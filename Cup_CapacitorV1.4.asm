@@ -154,6 +154,7 @@ determine_location:
 	push psw
 	push x
 	push y
+	push w
 	
 	mov x+0, #0
 	mov x+1, #0
@@ -378,7 +379,8 @@ end_search:
 	mov currentloc1, x+2
 	mov currentloc2, x+1
 	mov currentloc3, x+0
-
+	
+	pop w
 	pop y
 	pop x
 	pop psw
@@ -716,26 +718,29 @@ Init_L2:
 MainProgram:
     mov SP, #0x7f ; Setup stack pointer to the start of indirectly accessable data memory minus one
     lcall Init_all ; Initialize the hardware
+    ljmp forever_loop
 
-forever_loop:
-
-Wait_Milli_Seconds(#200)	
-mov a,w+0
-cjne a,#0x00,play
-mov a,w+1
-cjne a,#0x00,play
-mov a,w+2
-cjne a,#0x00,play
-jb ones_flag, play
-jb percent_flag,play
-
-clr TR2
-    jnb done, update_reading
-
-play:    
+    
     ljmp play_seq
     
+forever_loop:
+
+	
+;mov a, w+0
+;orl a, w+1
+;orl a, w+2
+;jnz play
+
+;jb ones_flag, play
+;jb percent_flag,play
+
+clr TR2
+jnb done, update_reading
+ljmp play_seq
+    
     update_reading:
+    clr TR2
+    ;setb done
     ;clr TR1;!
     ; Measure the frequency applied to pin T0 (T0 is routed to pin P1.2 using the 'crossbar')
     clr TR0 ; Stop counter 0
@@ -857,6 +862,7 @@ Check_boot_button:
 	jnb P3.7, $ ; Wait for push-button release
 	; Play the whole memory
 	mov a, bcd+1
+	setb done
 	ljmp check_level
 
 ;if Automatic_Sound_flag is 1 reas current water level
@@ -1086,14 +1092,13 @@ ljmp play_mem
 
 next_percent:
 mov position,#29
-clr done
 ljmp play_mem
 
 
 ; Play sound bite given location and length
 play_mem:
 	clr play_sount_flag ;
-	;clr TR2 ; Stop Timer 2 ISR from playing previous request
+	clr TR2 ; Stop Timer 2 ISR from playing previous request
 	setb FLASH_CE
 	clr SPEAKER ; Turn off speaker.
 	
@@ -1118,7 +1123,7 @@ play_mem:
 	
 	setb SPEAKER ; Turn on speaker.
 	setb play_sount_flag
-	;setb TR2 ; Start playback by enabling Timer 2
+	setb TR2 ; Start playback by enabling Timer 2
 forever_loop1:
 ljmp forever_loop
 	
