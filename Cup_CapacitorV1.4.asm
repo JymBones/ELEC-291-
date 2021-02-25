@@ -701,6 +701,11 @@ Init_L2:
 	setb EA ; Enable interrupts
 	setb IP.1
 	lcall LCD_4BIT
+	mov w+0,#0x00
+	mov w+1,#0x00
+	mov w+2,#0x00
+	mov w+3,#0x00
+	mov w+4,#0x00
 	ret
 
 ;---------------------------------;
@@ -714,9 +719,17 @@ MainProgram:
 
 forever_loop:
 
-mov a,w
+Wait_Milli_Seconds(#200)	
+mov a,w+0
 cjne a,#0x00,play
-clr ET2
+mov a,w+1
+cjne a,#0x00,play
+mov a,w+2
+cjne a,#0x00,play
+jb ones_flag, play
+jb percent_flag,play
+
+clr TR2
     jnb done, update_reading
 
 play:    
@@ -830,10 +843,10 @@ jb Automatic_Sound_Switch, play_seq
 ; Play sequence. Determines if the    ;
 ; current water level percentage      ;
 ; should be read, then plays specific ;
-; sound bites accordingly             ;
+; sound bytes accordingly             ;
 ;-------------------------------------;
 play_seq:
-setb ET2
+setb TR2
     Wait_Milli_Seconds(#200)
     jb ones_flag, mov_remainder
     jb percent_flag,say_percent
