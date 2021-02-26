@@ -29,8 +29,8 @@ F_SCK_MAX      EQU 20000000
 BAUDRATE       EQU 115200
 
 FLASH_CE EQU P0.3
-SPEAKER  EQU P2.1
-Automatic_Sound_Switch equ P3.3
+SPEAKER  EQU P2.0
+Automatic_Sound_Switch equ P2.6
 
 
 ; Commands supported by the SPI flash memory according to the datasheet
@@ -108,13 +108,13 @@ $LIST
 
 ; These 'equ' must match the hardware wiring
 ; They are used by 'LCD_4bit.inc'
-LCD_RS equ P2.0
-LCD_RW equ P1.7
-LCD_E  equ P1.6
-LCD_D4 equ P1.1
-LCD_D5 equ P1.0
-LCD_D6 equ P0.7
-LCD_D7 equ P0.6
+LCD_RS equ P3.3
+LCD_RW equ P3.2
+LCD_E  equ P3.1
+LCD_D4 equ P2.5
+LCD_D5 equ P2.4
+LCD_D6 equ P2.3
+LCD_D7 equ P2.2
 $NOLIST
 $include(LCD_4bit_72MHz.inc)
 $LIST
@@ -727,7 +727,7 @@ MainProgram:
 
 forever_loop:
 
-Wait_Milli_Seconds(#200)	
+;Wait_Milli_Seconds(#200)	
 
     jb done_playing, update_reading
 	jb reading_flag, update_reading
