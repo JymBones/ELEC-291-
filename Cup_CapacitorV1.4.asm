@@ -861,7 +861,7 @@ Check_boot_button:
 	jb P3.7, forever_loop0 ; Check if push-button pressed
 	jnb P3.7, $ ; Wait for push-button release
 	; Play the whole memory
-	mov a, bcd+1
+	mov a, bcd+2
 	setb done
 	ljmp check_level
 
@@ -870,7 +870,7 @@ automatic_routine:
 	clr seconds_flag
 	jnb Automatic_Sound_flag, Check_boot_button ;go back to loop if Automatic_Sound_flag is 0
 	; Play the whole memory
-	mov a, bcd+1
+	mov a, bcd+2
 	ljmp check_level
 	
 say_percent:
@@ -879,7 +879,7 @@ ljmp next_percent
 
 mov_remainder:
 mov a,remainder
-ljmp check_level
+ljmp testbegin
 
 forever_loop0:	
 	ljmp forever_loop
@@ -890,10 +890,22 @@ ljmp serial_get
 check_level:
 setb percent_flag
 
+check100:
+cjne a,#0x01, refresh_a
+mov position,#28
+ljmp play_mem
+
+refresh_a:
+mov a, bcd+1
+
+testbegin:
+setb percent_flag
+
 jnb ones_flag,reg_zero
 cjne a, #0x00,next1
 clr ones_flag
 ljmp play_seq
+
 
 reg_zero:
 cjne a, #0x00,next1
@@ -1076,7 +1088,7 @@ ljmp play_mem
 next90:
 cjne a,#0xA0,N8
 N8:
-jnb cy,next100
+jnb cy,nextpercent
 clr cy
 setb ones_flag
 subb a,#0x90
@@ -1084,11 +1096,6 @@ mov remainder,a
 mov position,#27
 ljmp play_mem
 
-next100:
-mov a, bcd+2
-cjne a,#0x01,next_percent
-mov position,#28
-ljmp play_mem
 
 next_percent:
 mov position,#29
