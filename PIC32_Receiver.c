@@ -622,10 +622,14 @@ int main(void)
 	DDPCON = 0;
 	CFGCON = 0;
 
-	TRISBbits.TRISB6 = 0;
-	LATBbits.LATB6 = 0;	
-	INTCONbits.MVEC = 1;
-	
+	//TRISBbits.TRISB6 = 0;
+	//LATBbits.LATB6 = 0;	
+	//INTCONbits.MVEC = 1;
+		//below is the detector main function
+    ANSELB &= ~64; // Set RB6 as a digital I/O
+    TRISB = 64;   // configure pin RB6 as input
+    CNPDBbits.CNPDB6 = 1;;   // Enable pull-up resistor for RB6
+ 	
 	Init_pwm(); // pwm output used to implement DAC
 	SetupTimer1(); // The ISR for this timer playsback the sound
     UART2Configure(115200);  // Configure UART2 for a baud rate of 115200
@@ -634,23 +638,24 @@ int main(void)
 	playcnt=0;
 	play_flag=0;
 	SET_CS; // Disable 25Q32 SPI flash memory
-    
-    
+    search_table(1);
+    waitms(2000);
+	
     //from main.c lcd
 	// Configure the LCD
 	Init_LCD_Pins();
 	LCD_4BIT();
-	
+	search_table(1);
+	waitms(2000);
    	// Display something in the LCD
 	LCDprint("->>>>>size>>>>>+", 1, 1);
 	LCDprint("Hello, World!", 2, 1);
 	waitms(500);
-	
-	//below is the detector main function
-    ANSELB &= ~64; // Set RB6 as a digital I/O
-    TRISB = 64;   // configure pin RB6 as input
-    CNPDBbits.CNPDB6 = 1;;   // Enable pull-up resistor for RB6
- 
+	search_table(1);
+	waitms(2000);
+
+	search_table(2);
+	waitms(2000);
 	waitms(500);
 	printf("Period measurement using the core timer free running counter.\r\n"
 	      "Connect signal to RB6 (pin 15).\r\n");
@@ -661,6 +666,9 @@ int main(void)
 	waitms(500);
 	LCDprintnonferrous(7);
 	waitms(500);
+	
+	search_table(3);
+	waitms(2000);
 	
 	for(i=0;i<10;i++){
 	count=GetPeriod(100);
