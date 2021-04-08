@@ -258,6 +258,50 @@ void LCDprint(char* string, unsigned char line, bool clear)
 }
 
 
+//lcd print for ferrous
+void LCDprintferrous(unsigned char length)
+{
+	int j;
+
+	WriteCommand(2 == 2 ? 0xc0 : 0x80);
+	waitms(5);
+	for (j = 0; j<length; j++)	WriteData(219);// Write the message
+	if (1) for (; j < CHARS_PER_LINE; j++) WriteData(' '); // Clear the rest of the line
+}
+
+//lcd print for non-ferrous
+void LCDprintnonferrous(unsigned char length)
+{
+	int j;
+
+	WriteCommand(2 == 2 ? 0xc0 : 0x80);
+	waitms(5);
+	for (j = 0; j<length; j++)	WriteData(255);// Write the message
+	if (1) for (; j < CHARS_PER_LINE; j++) WriteData(' '); // Clear the rest of the line
+}
+
+//prints appropriate values on lcd given detected variable
+void LCDprintDetected(int detected)
+{
+	unsigned char length=0;
+	bool positive = (detected>0)?1:0;
+	
+	detected = (detected>0)?detected:-detected;
+	
+	while(detected>=20){
+	detected-=20;
+	length++;
+	}
+	
+	if(positive){
+		LCDprintnonferrous(length);
+	}
+	else{
+		LCDprintferrous(length);
+	}
+
+}
+
 
 /*                 *
 *   main.c code    *
@@ -598,8 +642,9 @@ int main(void)
 	LCD_4BIT();
 	
    	// Display something in the LCD
-	LCDprint("LCD 4-bit test:", 1, 1);
+	LCDprint("->>>>>size>>>>>+", 1, 1);
 	LCDprint("Hello, World!", 2, 1);
+	waitms(500);
 	
 	//below is the detector main function
     ANSELB &= ~64; // Set RB6 as a digital I/O
@@ -609,6 +654,12 @@ int main(void)
 	waitms(500);
 	printf("Period measurement using the core timer free running counter.\r\n"
 	      "Connect signal to RB6 (pin 15).\r\n");
+	waitms(500);
+	LCDprintferrous(2);
+	waitms(500);
+	LCDprintferrous(4);
+	waitms(500);
+	LCDprintnonferrous(7);
 	waitms(500);
 	
 	for(i=0;i<10;i++){
@@ -636,6 +687,8 @@ int main(void)
 			T=(count*2.0)/(SYSCLK*100.0);
 			f=1/T;
 			detected=f-config;
+			
+			LCDprintDetected(detected);
 			
 			if(detected<-18&&detected>-50){
 			printf("Micro - Ferromagnetic; %f %f %f\r", f, detected, config);
